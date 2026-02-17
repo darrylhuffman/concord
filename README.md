@@ -2,7 +2,7 @@
 
 **ENCRYPTED · DECENTRALIZED · PRIVATE**
 
-## Your Conversations.<br>Your Servers.<br>Your Keys.
+### Your Conversations.<br>Your Servers.<br>Your Keys.
 
 Communication that belongs to you.
 
@@ -16,7 +16,7 @@ Every message and file is end-to-end encrypted. Group chat, voice, and video. Ho
 |---|---|
 | **End-to-End Encrypted** | Messages & files, AES-256-GCM |
 | **Zero Knowledge** | Servers see only ciphertext |
-| **Self-Hosted** | Run it on a Raspberry Pi |
+| **Self-Hosted** | Run it on your own hardware |
 | **Open Source** | MIT licensed, always |
 
 ### It just works
