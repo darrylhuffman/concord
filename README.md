@@ -128,3 +128,4 @@ Your seed phrase is your account. Your device is your encryption engine. Your se
 ---
 
 &copy; 2026 Concord. Open-source under MIT License.
+
