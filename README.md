@@ -1,20 +1,16 @@
-<p align="center">
-  <h1 align="center">Concord</h1>
-  <p align="center"><strong>Messaging Without Masters</strong></p>
-  <p align="center">ENCRYPTED · DECENTRALIZED · PRIVATE</p>
-</p>
+# <img src="icon.svg" width="32" height="32" alt="Concord" /> Concord
+
+**ENCRYPTED · DECENTRALIZED · PRIVATE**
+
+## Your Conversations.<br>Your Servers.<br>Your Keys.
+
+Communication that belongs to you.
+
+Every message and file is end-to-end encrypted. Group chat, voice, and video. Host your own server or use ours. No accounts — just a seed phrase and math.
 
 ---
 
-## Your Conversations. Your Servers. Your Keys.
-
-Every message and file is end-to-end encrypted. Group chat, voice, and video. Host your own server — no accounts, just a seed phrase and math.
-
----
-
-## What is Concord?
-
-Concord is a self-hosted, end-to-end encrypted communication server. Users connect with the Concord desktop app and bring their own cryptographic identity. The server stores only ciphertext it cannot read.
+## Features
 
 | | |
 |---|---|
@@ -83,15 +79,15 @@ pnpm start
 
 *Disappoint surveillance with math, not promises.*
 
-#### End-to-end encryption that actually works
+### End-to-end encryption that actually works
 
 Every message and file is encrypted client-side with AES-256-GCM before it touches a server. Keys are derived with Argon2id. The server stores ciphertext — it literally cannot read your conversations or access your files.
 
-#### Zero-knowledge architecture by design
+### Zero-knowledge architecture by design
 
 There is no master user table. No social graph on a server. Your public key is your username. If a server is compromised, attackers get encrypted blobs they can't decrypt.
 
-#### Your identity is a seed phrase, not a database row
+### Your identity is a seed phrase, not a database row
 
 24 words generate your cryptographic keypair via BIP39. No email, no password, no account. Take your identity anywhere. It survives lost devices, deleted apps, and shuttered companies.
 
@@ -131,6 +127,4 @@ Your seed phrase is your account. Your device is your encryption engine. Your se
 
 ---
 
-<p align="center">
-  &copy; 2026 Concord. Open-source under MIT License.
-</p>
+&copy; 2026 Concord. Open-source under MIT License.
