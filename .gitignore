@@ -20,3 +20,5 @@ npm-shrinkwrap.json
 realm.sqlite
 uploads/
 keys
+Client/apps/concord-server/data/realm.sqlite-shm
+Client/apps/concord-server/data/realm.sqlite-wal
