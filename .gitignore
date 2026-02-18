@@ -19,3 +19,4 @@ npm-shrinkwrap.json
 \dist
 realm.sqlite
 uploads/
+keys
