@@ -2,8 +2,6 @@ packages:
   - "Client"
   - "Client/packages/*"
   - "Client/apps/*"
-  - "Server/ConcordAPI"
-  - "Server/ConcordUI"
 
 onlyBuiltDependencies:
   - better-sqlite3

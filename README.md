@@ -119,6 +119,10 @@ Yes. Every line of code is MIT licensed and available on GitHub. No hidden telem
 
 Concord includes built-in voice channels, video calls, and screen sharing using a modern SFU architecture. All media runs through your realm server — no third-party services.
 
+**What is the concord-server directory in the repo?**
+
+That directory is a submodule we utilize to manage our website easy server deploy infrastructure. The easy deploy infrastructure is our only means of profit - and thus in a private repo.
+
 ---
 
 ## Trust math, not promises.
