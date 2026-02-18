@@ -4,3 +4,6 @@
 [submodule "concord-server"]
 	path = concord-server
 	url = https://github.com/darrylhuffman/concord-server.git
+[submodule "Client/apps/client"]
+	path = Client/apps/client
+	url = https://github.com/letsconcord/concord-app.git

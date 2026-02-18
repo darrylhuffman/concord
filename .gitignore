@@ -3,7 +3,6 @@ CLAUDE.md
 .playwright-mcp
 .claude
 # Server
-"client"
 
 # Dependencies
 node_modules
