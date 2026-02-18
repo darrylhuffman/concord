@@ -1,0 +1,6 @@
+[submodule "Server/Server"]
+	path = Server/Server
+	url = https://github.com/darrylhuffman/concord-server.git
+[submodule "concord-server"]
+	path = concord-server
+	url = https://github.com/darrylhuffman/concord-server.git
