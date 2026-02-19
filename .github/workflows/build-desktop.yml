@@ -62,8 +62,8 @@ jobs:
         run: pnpm install
 
       - name: Build Tauri app
-        working-directory: Client/apps/client
-        run: pnpm exec tauri build --target ${{ matrix.target }}
+        working-directory: Client
+        run: pnpm --filter @concord/client tauri build -- --target ${{ matrix.target }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
