@@ -29,9 +29,13 @@ jobs:
         working-directory: Client
         run: pnpm install
 
-      - name: Build packages & client
+      - name: Build shared packages
         working-directory: Client
-        run: pnpm -r build
+        run: pnpm --filter @concord/protocol build && pnpm --filter @concord/crypto build
+
+      - name: Build client frontend
+        working-directory: Client/apps/client
+        run: npx vite build
 
       - name: Deploy to Hetzner
         uses: burnett01/rsync-deployments@7.0.1
