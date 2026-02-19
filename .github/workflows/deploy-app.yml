@@ -1,0 +1,44 @@
+name: Deploy Client App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Client/apps/client/**'
+      - 'Client/packages/**'
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: Client/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: Client
+        run: pnpm install
+
+      - name: Build packages & client
+        working-directory: Client
+        run: pnpm -r build
+
+      - name: Deploy to Hetzner
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avz --delete
+          path: Client/apps/client/dist/
+          remote_path: /opt/concord-server/app-dist/
+          remote_host: ${{ secrets.DEPLOY_HOST }}
+          remote_user: ${{ secrets.DEPLOY_USER }}
+          remote_key: ${{ secrets.DEPLOY_SSH_KEY }}
