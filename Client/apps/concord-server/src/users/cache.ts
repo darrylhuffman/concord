@@ -25,6 +25,10 @@ export function getProfile(publicKey: string): UserProfile | undefined {
   };
 }
 
+export function deleteProfile(publicKey: string): void {
+  getDb().prepare("DELETE FROM user_profiles WHERE public_key = ?").run(publicKey);
+}
+
 export function getAllProfiles(): UserProfile[] {
   const rows = getDb()
     .prepare("SELECT * FROM user_profiles ORDER BY last_seen DESC")

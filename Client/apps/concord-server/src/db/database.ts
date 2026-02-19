@@ -161,6 +161,30 @@ function runMigrations(db: Database.Database): void {
       created_at INTEGER NOT NULL
     );
   `);
+
+  // Migration: roles, role_assignments, banned_users tables
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS roles (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      permissions INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS role_assignments (
+      public_key TEXT PRIMARY KEY,
+      role_id TEXT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+      assigned_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS banned_users (
+      public_key TEXT PRIMARY KEY,
+      banned_by TEXT NOT NULL,
+      reason TEXT,
+      banned_at INTEGER NOT NULL
+    );
+  `);
 }
 
 export function closeDb(): void {

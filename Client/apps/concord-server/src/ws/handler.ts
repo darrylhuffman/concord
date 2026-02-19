@@ -25,7 +25,16 @@ import type {
   VoiceConnectTransportCommand,
   VoiceCloseProducerCommand,
   ChatMessage,
+  MemberKickCommand,
+  MemberBanCommand,
+  MemberUnbanCommand,
+  RoleCreateCommand,
+  RoleUpdateCommand,
+  RoleDeleteCommand,
+  RoleAssignCommand,
+  RoleReorderCommand,
 } from "@concord/protocol";
+import { Permission, hasPermission } from "@concord/protocol";
 import { verify, fromBase58, fromHex, toHex } from "@concord/crypto";
 import {
   addConnection,
@@ -41,7 +50,9 @@ import config, { isAdmin } from "../config.js";
 import { getRealmInfo, updateRealm, setRealmPasswordVerify } from "../realm/realm.js";
 import { getChannels, getChannel, createChannel, deleteChannel, findOrCreateDmChannel, getDmChannelsForUser, setChannelPasswordVerify } from "../realm/channels.js";
 import { saveMessage, getChannelMessages } from "../messages/store.js";
-import { upsertProfile, getAllProfiles } from "../users/cache.js";
+import { upsertProfile, getAllProfiles, deleteProfile } from "../users/cache.js";
+import { getAllRoles, createRole, updateRole, deleteRole, reorderRoles, assignRole, getAllRoleAssignments, getUserPermissions } from "../roles/roles.js";
+import { banUser, unbanUser, isBanned } from "../users/bans.js";
 import {
   getOrCreateRoom,
   removeParticipant,
@@ -57,6 +68,13 @@ import {
 } from "../media/rooms.js";
 import { isSfuReady } from "../media/sfu.js";
 import { getInviteLinks, regenerateInvite } from "../invites/invites.js";
+
+/** Check if a user has a specific permission (admins bypass everything) */
+function canDo(publicKey: string | undefined, perm: number): boolean {
+  if (!publicKey) return false;
+  if (isAdmin(publicKey)) return true;
+  return hasPermission(getUserPermissions(publicKey), perm);
+}
 
 export function handleConnection(ws: WebSocket): void {
   const conn = addConnection(ws);
@@ -222,6 +240,30 @@ function handleMessage(ws: WebSocket, envelope: Envelope): void {
     case "invite:regenerate":
       handleInviteRegenerate(ws, envelope.payload as InviteRegenerateCommand);
       break;
+    case "member:kick":
+      handleMemberKick(ws, envelope.payload as MemberKickCommand);
+      break;
+    case "member:ban":
+      handleMemberBan(ws, envelope.payload as MemberBanCommand);
+      break;
+    case "member:unban":
+      handleMemberUnban(ws, envelope.payload as MemberUnbanCommand);
+      break;
+    case "role:create":
+      handleRoleCreate(ws, envelope.payload as RoleCreateCommand);
+      break;
+    case "role:update":
+      handleRoleUpdate(ws, envelope.payload as RoleUpdateCommand);
+      break;
+    case "role:delete":
+      handleRoleDelete(ws, envelope.payload as RoleDeleteCommand);
+      break;
+    case "role:assign":
+      handleRoleAssign(ws, envelope.payload as RoleAssignCommand);
+      break;
+    case "role:reorder":
+      handleRoleReorder(ws, envelope.payload as RoleReorderCommand);
+      break;
     default:
       send(ws, {
         type: "realm:error",
@@ -254,7 +296,7 @@ function handleRealmJoin(ws: WebSocket, _payload: RealmJoinCommand): void {
 
   const realm = getRealmInfo();
   const publicChannels = getChannels();
-  const members = getAllProfiles();
+  const rawMembers = getAllProfiles();
   const onlineKeys = getAuthenticatedConnections().map((c) => c.publicKey!);
   const adminFlag = conn?.publicKey ? isAdmin(conn.publicKey) : false;
   const voiceParticipants = getAllVoiceParticipants();
@@ -273,11 +315,24 @@ function handleRealmJoin(ws: WebSocket, _payload: RealmJoinCommand): void {
 
   const inviteLinks = getInviteLinks();
 
+  // Enrich members with role assignments
+  const roleAssignments = getAllRoleAssignments();
+  const members = rawMembers.map((m) => ({
+    ...m,
+    roleId: roleAssignments[m.publicKey] ?? undefined,
+  }));
+
+  // Roles + permissions for the connecting user
+  const roles = getAllRoles();
+  const myPermissions = conn?.publicKey
+    ? (adminFlag ? 0xffffffff : getUserPermissions(conn.publicKey))
+    : 0;
+
   send(ws, {
     type: "realm:welcome",
     id: uuid(),
     timestamp: Date.now(),
-    payload: { realm, channels, members, onlineKeys, isAdmin: adminFlag, voiceParticipants, screenSharers, inviteLinks },
+    payload: { realm, channels, members, onlineKeys, isAdmin: adminFlag, voiceParticipants, screenSharers, inviteLinks, roles, myPermissions },
   });
 }
 
@@ -508,6 +563,18 @@ function handleAuthResponse(ws: WebSocket, payload: AuthResponseCommand): void {
       clearTimeout(conn.authTimeout);
       conn.authTimeout = undefined;
     }
+    return;
+  }
+
+  // Ban check — reject banned users before granting access
+  if (isBanned(conn.publicKey)) {
+    send(ws, {
+      type: "realm:error",
+      id: uuid(),
+      timestamp: Date.now(),
+      payload: { code: "BANNED", message: "You are banned from this realm" },
+    });
+    ws.close();
     return;
   }
 
@@ -953,12 +1020,12 @@ function handleRealmUpdate(ws: WebSocket, payload: RealmUpdateCommand): void {
 
 function handleChannelCreate(ws: WebSocket, payload: ChannelCreateCommand): void {
   const conn = getConnection(ws);
-  if (!conn?.publicKey || !isAdmin(conn.publicKey)) {
+  if (!canDo(conn?.publicKey, Permission.MANAGE_CHANNELS)) {
     send(ws, {
       type: "realm:error",
       id: uuid(),
       timestamp: Date.now(),
-      payload: { code: "FORBIDDEN", message: "Only admins can create channels" },
+      payload: { code: "FORBIDDEN", message: "You need Manage Channels permission" },
     });
     return;
   }
@@ -981,12 +1048,12 @@ function handleChannelCreate(ws: WebSocket, payload: ChannelCreateCommand): void
 
 function handleChannelDelete(ws: WebSocket, payload: ChannelDeleteCommand): void {
   const conn = getConnection(ws);
-  if (!conn?.publicKey || !isAdmin(conn.publicKey)) {
+  if (!canDo(conn?.publicKey, Permission.MANAGE_CHANNELS)) {
     send(ws, {
       type: "realm:error",
       id: uuid(),
       timestamp: Date.now(),
-      payload: { code: "FORBIDDEN", message: "Only admins can delete channels" },
+      payload: { code: "FORBIDDEN", message: "You need Manage Channels permission" },
     });
     return;
   }
@@ -1042,12 +1109,12 @@ function handleRealmSetPasswordVerify(ws: WebSocket, payload: RealmSetPasswordVe
 
 function handleChannelSetPasswordVerify(ws: WebSocket, payload: ChannelSetPasswordVerifyCommand): void {
   const conn = getConnection(ws);
-  if (!conn?.publicKey || !isAdmin(conn.publicKey)) {
+  if (!canDo(conn?.publicKey, Permission.MANAGE_CHANNELS)) {
     send(ws, {
       type: "realm:error",
       id: uuid(),
       timestamp: Date.now(),
-      payload: { code: "FORBIDDEN", message: "Only admins can set channel password" },
+      payload: { code: "FORBIDDEN", message: "You need Manage Channels permission" },
     });
     return;
   }
@@ -1096,4 +1163,150 @@ function handleInviteRegenerate(ws: WebSocket, payload: InviteRegenerateCommand)
     timestamp: Date.now(),
     payload: { inviteLinks },
   });
+}
+
+// ── Member moderation handlers ──
+
+function handleMemberKick(ws: WebSocket, payload: MemberKickCommand): void {
+  const conn = getConnection(ws);
+  if (!canDo(conn?.publicKey, Permission.KICK)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "You need Kick permission" } });
+    return;
+  }
+  if (payload.publicKey === conn?.publicKey) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "INVALID_TARGET", message: "Cannot kick yourself" } });
+    return;
+  }
+  if (isAdmin(payload.publicKey)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "Cannot kick an admin" } });
+    return;
+  }
+
+  const target = getConnectionByPublicKey(payload.publicKey);
+  if (target) {
+    send(target.ws, { type: "member:kicked", id: uuid(), timestamp: Date.now(), payload: { publicKey: payload.publicKey } });
+    target.ws.close();
+  }
+
+  // Remove from database so they don't reappear on reconnect
+  deleteProfile(payload.publicKey);
+
+  // Include sender so their member list updates too
+  broadcastToAll({ type: "member:leave", id: uuid(), timestamp: Date.now(), payload: { publicKey: payload.publicKey, removed: true } });
+}
+
+function handleMemberBan(ws: WebSocket, payload: MemberBanCommand): void {
+  const conn = getConnection(ws);
+  if (!canDo(conn?.publicKey, Permission.BAN)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "You need Ban permission" } });
+    return;
+  }
+  if (payload.publicKey === conn?.publicKey) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "INVALID_TARGET", message: "Cannot ban yourself" } });
+    return;
+  }
+  if (isAdmin(payload.publicKey)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "Cannot ban an admin" } });
+    return;
+  }
+
+  banUser(payload.publicKey, conn!.publicKey!, payload.reason);
+
+  const target = getConnectionByPublicKey(payload.publicKey);
+  if (target) {
+    send(target.ws, { type: "member:banned", id: uuid(), timestamp: Date.now(), payload: { publicKey: payload.publicKey } });
+    target.ws.close();
+  }
+
+  // Remove from database so they don't reappear on reconnect
+  deleteProfile(payload.publicKey);
+
+  // Include sender so their member list updates too
+  broadcastToAll({ type: "member:leave", id: uuid(), timestamp: Date.now(), payload: { publicKey: payload.publicKey, removed: true } });
+}
+
+function handleMemberUnban(ws: WebSocket, payload: MemberUnbanCommand): void {
+  const conn = getConnection(ws);
+  if (!canDo(conn?.publicKey, Permission.BAN)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "You need Ban permission" } });
+    return;
+  }
+
+  const removed = unbanUser(payload.publicKey);
+  if (!removed) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "NOT_FOUND", message: "User is not banned" } });
+  }
+}
+
+// ── Role management handlers ──
+
+function handleRoleCreate(ws: WebSocket, payload: RoleCreateCommand): void {
+  const conn = getConnection(ws);
+  if (!canDo(conn?.publicKey, Permission.MANAGE_ROLES)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "You need Manage Roles permission" } });
+    return;
+  }
+
+  const role = createRole(payload.name, payload.permissions);
+  broadcastToAll({ type: "role:create", id: uuid(), timestamp: Date.now(), payload: { role } });
+}
+
+function handleRoleUpdate(ws: WebSocket, payload: RoleUpdateCommand): void {
+  const conn = getConnection(ws);
+  if (!canDo(conn?.publicKey, Permission.MANAGE_ROLES)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "You need Manage Roles permission" } });
+    return;
+  }
+
+  const role = updateRole(payload.roleId, { name: payload.name, permissions: payload.permissions, sortOrder: payload.sortOrder });
+  if (!role) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "NOT_FOUND", message: "Role not found" } });
+    return;
+  }
+
+  broadcastToAll({ type: "role:update", id: uuid(), timestamp: Date.now(), payload: { role } });
+}
+
+function handleRoleDelete(ws: WebSocket, payload: RoleDeleteCommand): void {
+  const conn = getConnection(ws);
+  if (!canDo(conn?.publicKey, Permission.MANAGE_ROLES)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "You need Manage Roles permission" } });
+    return;
+  }
+
+  const deleted = deleteRole(payload.roleId);
+  if (!deleted) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "NOT_FOUND", message: "Role not found" } });
+    return;
+  }
+
+  broadcastToAll({ type: "role:delete", id: uuid(), timestamp: Date.now(), payload: { roleId: payload.roleId } });
+}
+
+function handleRoleAssign(ws: WebSocket, payload: RoleAssignCommand): void {
+  const conn = getConnection(ws);
+  if (!canDo(conn?.publicKey, Permission.MANAGE_ROLES)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "You need Manage Roles permission" } });
+    return;
+  }
+  // Only admins can assign roles to other admins
+  if (isAdmin(payload.publicKey) && !isAdmin(conn!.publicKey!)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "Cannot assign roles to admins" } });
+    return;
+  }
+
+  assignRole(payload.publicKey, payload.roleId);
+  broadcastToAll({ type: "role:assign", id: uuid(), timestamp: Date.now(), payload: { publicKey: payload.publicKey, roleId: payload.roleId } });
+}
+
+function handleRoleReorder(ws: WebSocket, payload: RoleReorderCommand): void {
+  const conn = getConnection(ws);
+  if (!canDo(conn?.publicKey, Permission.MANAGE_ROLES)) {
+    send(ws, { type: "realm:error", id: uuid(), timestamp: Date.now(), payload: { code: "FORBIDDEN", message: "You need Manage Roles permission" } });
+    return;
+  }
+
+  reorderRoles(payload.order);
+  const roles = getAllRoles();
+  broadcastToAll({ type: "roles:reordered", id: uuid(), timestamp: Date.now(), payload: { roles } });
 }

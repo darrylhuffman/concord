@@ -4,4 +4,13 @@ export interface UserProfile {
   name: string;
   bio?: string;
   lastSeen?: number;
+  roleId?: string;
+}
+
+/** A named role with a permission bitmask */
+export interface Role {
+  id: string;
+  name: string;
+  permissions: number;
+  sortOrder: number;
 }

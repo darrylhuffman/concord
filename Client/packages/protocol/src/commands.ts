@@ -122,6 +122,48 @@ export interface InviteRegenerateCommand {
   inviteId: string;
 }
 
+// ── Member moderation commands ──
+
+export interface MemberKickCommand {
+  publicKey: string;
+}
+
+export interface MemberBanCommand {
+  publicKey: string;
+  reason?: string;
+}
+
+export interface MemberUnbanCommand {
+  publicKey: string;
+}
+
+// ── Role management commands ──
+
+export interface RoleCreateCommand {
+  name: string;
+  permissions: number;
+}
+
+export interface RoleUpdateCommand {
+  roleId: string;
+  name?: string;
+  permissions?: number;
+  sortOrder?: number;
+}
+
+export interface RoleDeleteCommand {
+  roleId: string;
+}
+
+export interface RoleAssignCommand {
+  publicKey: string;
+  roleId: string | null;
+}
+
+export interface RoleReorderCommand {
+  order: string[];
+}
+
 /** Union of all command types for the type field */
 export type CommandType =
   | "realm:join"
@@ -146,4 +188,12 @@ export type CommandType =
   | "voice:create-transport"
   | "voice:connect-transport"
   | "voice:close-producer"
-  | "invite:regenerate";
+  | "invite:regenerate"
+  | "member:kick"
+  | "member:ban"
+  | "member:unban"
+  | "role:create"
+  | "role:update"
+  | "role:delete"
+  | "role:assign"
+  | "role:reorder";

@@ -1,5 +1,5 @@
 import type { Channel } from "./channel.js";
-import type { UserProfile } from "./user.js";
+import type { UserProfile, Role } from "./user.js";
 
 export interface RealmInfo {
   id: string;
@@ -29,4 +29,6 @@ export interface RealmWelcome {
   voiceParticipants?: Record<string, { publicKey: string; name: string }[]>;
   screenSharers?: Record<string, string[]>;
   inviteLinks?: InviteLinkInfo[];
+  roles?: Role[];
+  myPermissions?: number;
 }

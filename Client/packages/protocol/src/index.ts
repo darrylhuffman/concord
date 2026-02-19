@@ -1,4 +1,4 @@
-export type { UserProfile } from "./user.js";
+export type { UserProfile, Role } from "./user.js";
 export type { Channel, ChannelType } from "./channel.js";
 export type { RealmInfo, RealmWelcome, InviteLinkInfo } from "./realm.js";
 export type {
@@ -31,6 +31,14 @@ export type {
   RealmSetPasswordVerifyCommand,
   ChannelSetPasswordVerifyCommand,
   InviteRegenerateCommand,
+  MemberKickCommand,
+  MemberBanCommand,
+  MemberUnbanCommand,
+  RoleCreateCommand,
+  RoleUpdateCommand,
+  RoleDeleteCommand,
+  RoleAssignCommand,
+  RoleReorderCommand,
 } from "./commands.js";
 export type {
   EventType,
@@ -57,4 +65,12 @@ export type {
   VoiceNewProducerEvent,
   VoiceProducerClosedEvent,
   InviteRegeneratedEvent,
+  MemberKickedEvent,
+  MemberBannedEvent,
+  RoleCreateEvent,
+  RoleUpdateEvent,
+  RoleDeleteEvent,
+  RoleAssignEvent,
+  RolesReorderedEvent,
 } from "./events.js";
+export { Permission, hasPermission } from "./permissions.js";
