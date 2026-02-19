@@ -64,6 +64,10 @@ jobs:
         working-directory: Client
         run: pnpm install
 
+      - name: Build shared packages
+        working-directory: Client
+        run: pnpm --filter @concord/protocol build && pnpm --filter @concord/crypto build
+
       - name: Build Tauri app
         working-directory: Client
         run: pnpm --filter @concord/client tauri build -- --target ${{ matrix.target }}

@@ -37,8 +37,11 @@ jobs:
         run: pnpm --filter @concord/protocol build && pnpm --filter @concord/crypto build
 
       - name: Build client frontend
-        working-directory: Client
-        run: pnpm --filter @concord/client run build:web
+        working-directory: Client/apps/client
+        run: node ../../node_modules/vite/bin/vite.js build
+
+      - name: Verify dist exists
+        run: ls -la Client/apps/client/dist/
 
       - name: Deploy to Hetzner
         uses: burnett01/rsync-deployments@7.0.1
