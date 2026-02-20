@@ -70,6 +70,12 @@ async function main() {
   // Health check
   app.get("/health", async () => ({ status: "ok", realm: realm.name }));
 
+  // Shutdown endpoint — allows the Tauri client to stop the server when process handle is lost
+  app.post("/shutdown", async (req, reply) => {
+    reply.send({ status: "shutting_down" });
+    setTimeout(shutdown, 100);
+  });
+
   // Start retention cron
   const retentionTimer = startRetentionCron();
 
