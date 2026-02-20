@@ -31,39 +31,48 @@ Every message and file is end-to-end encrypted. Group chat, voice, and video. Ho
 
 ## Quick Start
 
-### One command. Your server.
+### Deploy with Docker
 
 Concord's realm server is a single container. No microservices. No Kubernetes. No PhD required.
 
 ```bash
-docker run -d -p 9000:9000 \
-  -v realm-data:/data \
-  -e REALM_NAME="My Community" \
-  concord/server
+git clone https://github.com/letsconcord/concord.git
+cd concord/Client/apps/concord-server
+
+# Configure your realm
+echo 'REALM_NAME=My Community' > .env
+echo 'REALM_PASSWORD=your-secret-password' >> .env
+
+# Build and run
+docker compose up -d
 ```
 
-### Run from source
+Your server is now live at `ws://localhost:9000/ws`. Connect to it from any Concord client.
+
+### Run from source (no Docker)
 
 ```bash
-git clone https://github.com/user/concord-server.git
-cd concord-server
+git clone https://github.com/letsconcord/concord.git
+cd concord/Client
 pnpm install
 pnpm build
-pnpm start
+cd apps/concord-server
+REALM_NAME="My Community" REALM_PASSWORD="your-secret-password" pnpm start
 ```
 
 ### Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `PORT` | `9000` | Server listen port |
-| `HOST` | `0.0.0.0` | Server listen host |
 | `REALM_NAME` | `My Realm` | Realm display name |
 | `REALM_DESCRIPTION` | `A Concord server` | Realm description |
-| `REALM_ENCRYPTED` | `false` | Whether realm uses encryption |
+| `REALM_PASSWORD` | — | Realm password — enables encryption automatically |
+| `REALM_ADMINS` | — | Semicolon-separated admin public keys |
+| `PORT` | `9000` | Server listen port |
+| `HOST` | `0.0.0.0` | Server listen host |
 | `RETENTION_DAYS` | `null` (forever) | Auto-delete messages older than N days |
-| `DATA_DIR` | `./data` | SQLite database + file storage directory |
 | `MAX_FILE_SIZE` | `52428800` (50MB) | Maximum upload file size in bytes |
+| `DATA_DIR` | `./data` | SQLite database + file storage directory |
 
 ---
 
@@ -105,7 +114,7 @@ When you first open Concord, you generate a 24-word BIP39 seed phrase. This phra
 
 **Can I really host my own server?**
 
-Yes. One Docker command: `docker run -d -p 9000:9000 concord/server`. That's it. SQLite database, zero external dependencies. It runs text channels on a Raspberry Pi.
+Yes. Clone the repo, `docker compose up -d`, done. SQLite database, zero external dependencies. It runs text channels on a Raspberry Pi.
 
 **What encryption does Concord use?**
 

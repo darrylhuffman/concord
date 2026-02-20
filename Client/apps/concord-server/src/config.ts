@@ -1,4 +1,5 @@
 import os from "node:os";
+import { deriveKey, createVerifyBlob } from "@concord/crypto";
 
 /** Detect the first non-internal IPv4 address for mediasoup ICE candidates */
 function detectLocalIp(): string {
@@ -144,6 +145,25 @@ export function isPrivateIp(ip: string | undefined): boolean {
 
 export function isAdmin(publicKey: string): boolean {
   return config.admins.includes(publicKey);
+}
+
+const VERIFY_SALT = "concord:verify";
+
+/**
+ * If REALM_PASSWORD is set (and REALM_PASSWORD_VERIFY is not),
+ * derive the verification blob automatically so users can simply
+ * pass `-e REALM_PASSWORD=secret` without pre-computing the blob.
+ */
+export async function resolvePassword(): Promise<void> {
+  const password = process.env.REALM_PASSWORD?.trim();
+  if (!password || config.passwordVerify) return;
+
+  const key = await deriveKey(password, VERIFY_SALT);
+  const { ciphertext, nonce } = await createVerifyBlob(key);
+
+  config.passwordVerify = ciphertext;
+  config.passwordVerifyNonce = nonce;
+  config.encrypted = true;
 }
 
 export default config;

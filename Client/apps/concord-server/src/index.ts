@@ -9,10 +9,13 @@ import { registerFileRoutes } from "./files/upload.js";
 import { registerRssRoutes } from "./rss/feed.js";
 import { startRetentionCron } from "./messages/retention.js";
 import { initSfu } from "./media/sfu.js";
-import config, { isPrivateIp } from "./config.js";
+import config, { isPrivateIp, resolvePassword } from "./config.js";
 import { getInviteKey } from "./invites/invites.js";
 
 async function main() {
+  // Derive password verification blob from REALM_PASSWORD if provided
+  await resolvePassword();
+
   // Initialize database
   initDb();
   const realm = ensureRealm();
