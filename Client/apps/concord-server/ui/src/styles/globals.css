@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
+
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(240 10% 3.9%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(240 10% 3.9%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(240 10% 3.9%);
+  --color-primary: hsl(240 5.9% 10%);
+  --color-primary-foreground: hsl(0 0% 98%);
+  --color-secondary: hsl(240 4.8% 95.9%);
+  --color-secondary-foreground: hsl(240 5.9% 10%);
+  --color-muted: hsl(240 4.8% 95.9%);
+  --color-muted-foreground: hsl(240 3.8% 46.1%);
+  --color-accent: hsl(240 4.8% 95.9%);
+  --color-accent-foreground: hsl(240 5.9% 10%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+  --color-border: hsl(240 5.9% 90%);
+  --color-input: hsl(240 5.9% 90%);
+  --color-ring: hsl(240 10% 3.9%);
+  --color-identity: var(--color-green-500);
+  --color-surface: hsl(0 0% 97%);
+  --color-surface-raised: hsl(0 0% 100%);
+  --color-glow: hsl(240 5.9% 10% / 0.08);
+  --color-sidebar-background: hsl(0 0% 98%);
+  --color-sidebar-foreground: hsl(240 5.3% 26.1%);
+  --color-sidebar-primary: hsl(240 5.9% 10%);
+  --color-sidebar-primary-foreground: hsl(0 0% 98%);
+  --color-sidebar-accent: hsl(240 4.8% 95.9%);
+  --color-sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --color-sidebar-border: hsl(220 13% 91%);
+  --color-sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --radius: 0.5rem;
+
+  /* New palette tokens (light mode defaults — overridden in .dark) */
+  --color-void: hsl(0 0% 98%);
+  --color-abyss: hsl(0 0% 96%);
+  --color-deep: hsl(0 0% 100%);
+  --color-surface-light: hsl(0 0% 95%);
+  --color-cyan: hsl(192 91% 37%);
+  --color-cyan-light: hsl(187 86% 53%);
+  --color-accent-light: hsl(263 70% 68%);
+  --color-accent-bright: hsl(263 70% 78%);
+  --color-text-secondary: hsl(215 14% 58%);
+}
+
+.dark {
+  --color-background: #0a0e1a;
+  --color-foreground: #f1f5f9;
+  --color-card: #0f1629;
+  --color-card-foreground: #f1f5f9;
+  --color-popover: #0f1629;
+  --color-popover-foreground: #f1f5f9;
+  --color-primary: #9357EE;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #151d35;
+  --color-secondary-foreground: #f1f5f9;
+  --color-muted: #151d35;
+  --color-muted-foreground: #64748b;
+  --color-accent: #1e2a4a;
+  --color-accent-foreground: #f1f5f9;
+  --color-destructive: hsl(0 63% 51%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-input: rgba(255, 255, 255, 0.07);
+  --color-ring: #9357EE;
+  --color-identity: var(--color-green-500);
+  --color-surface: #0f1629;
+  --color-surface-raised: #151d35;
+  --color-glow: rgba(147, 87, 238, 0.15);
+  --color-sidebar-background: #050810;
+  --color-sidebar-foreground: #94a3b8;
+  --color-sidebar-primary: #9357EE;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #0f1629;
+  --color-sidebar-accent-foreground: #f1f5f9;
+  --color-sidebar-border: rgba(255, 255, 255, 0.05);
+  --color-sidebar-ring: #9357EE;
+
+  /* Extended palette */
+  --color-void: #050810;
+  --color-abyss: #0a0e1a;
+  --color-deep: #0f1629;
+  --color-surface-light: #1e2a4a;
+  --color-cyan: #06b6d4;
+  --color-cyan-light: #22d3ee;
+  --color-accent-light: #BF9EFA;
+  --color-accent-bright: #d4b8ff;
+  --color-text-secondary: #94a3b8;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100dvh;
+  }
+  #root {
+    height: 100dvh;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-abyss);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-light);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Gradient text — purple to cyan */
+.gradient-text {
+  background: linear-gradient(135deg, #BF9EFA 0%, #9357EE 40%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass panels */
+@layer components {
+  .glass {
+    background-color: rgba(5, 8, 16, 0.75);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .glass-light {
+    background-color: rgba(5, 8, 16, 0.5);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Animations */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+.animate-slide-in {
+  animation: slide-in 0.2s ease-out;
+}

@@ -1,6 +1,10 @@
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import fs from "node:fs";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
+import fastifyStatic from "@fastify/static";
 import { initDb, closeDb } from "./db/database.js";
 import { ensureRealm, syncRealmConfig } from "./realm/realm.js";
 import { ensureDefaultChannels } from "./realm/channels.js";
@@ -11,6 +15,9 @@ import { startRetentionCron } from "./messages/retention.js";
 import { initSfu } from "./media/sfu.js";
 import config, { isPrivateIp, resolvePassword } from "./config.js";
 import { getInviteKey } from "./invites/invites.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function main() {
   // Derive password verification blob from REALM_PASSWORD if provided
@@ -66,6 +73,47 @@ async function main() {
     if (!key) return reply.status(404).send({ error: "Invite not found" });
     return { key };
   });
+
+  // Serve realm UI (built Vite app in dist-ui/)
+  const uiDir = path.join(__dirname, "..", "dist-ui");
+  if (fs.existsSync(uiDir)) {
+    // CSP for realm UI — any client should be able to embed this realm's UI
+    const uiCsp = [
+      "default-src 'self'",
+      "script-src 'self'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' blob: data: https:",
+      "media-src 'self' blob:",
+      "connect-src 'self' ws: wss:",
+    ].join("; ");
+
+    // Add CSP header to all /ui/ requests
+    app.addHook("onRequest", async (req, reply) => {
+      if (req.url.startsWith("/ui")) {
+        reply.header("Content-Security-Policy", uiCsp);
+      }
+    });
+
+    await app.register(fastifyStatic, {
+      root: uiDir,
+      prefix: "/ui/",
+      decorateReply: false,
+    });
+
+    // SPA fallback — any /ui/* path that doesn't match a file serves index.html
+    app.setNotFoundHandler(async (req, reply) => {
+      if (req.url.startsWith("/ui")) {
+        reply.header("Content-Security-Policy", uiCsp);
+        return reply.sendFile("index.html", uiDir);
+      }
+      reply.status(404).send({ error: "Not found" });
+    });
+
+    console.log(`[ui] Serving realm UI at /ui/`);
+  } else {
+    console.log(`[ui] No dist-ui/ found — realm UI not available (run "pnpm build:ui" to build)`);
+  }
 
   // Health check
   app.get("/health", async () => ({ status: "ok", realm: realm.name }));

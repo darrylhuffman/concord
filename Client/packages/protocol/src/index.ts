@@ -74,3 +74,21 @@ export type {
   RolesReorderedEvent,
 } from "./events.js";
 export { Permission, hasPermission } from "./permissions.js";
+export type {
+  BridgeMessage,
+  ParentToIframeMessage,
+  IframeToParentMessage,
+  BridgeInitMessage,
+  BridgeRealmKeyMessage,
+  BridgeChannelKeyMessage,
+  BridgeSignResponseMessage,
+  BridgeProfileUpdateMessage,
+  BridgeReadyMessage,
+  BridgeSignRequestMessage,
+  BridgeRealmStatusMessage,
+  BridgeRealmInfoMessage,
+  BridgeNotificationUnreadMessage,
+  BridgeVoiceStatusMessage,
+  BridgeOpenExternalMessage,
+  BridgeChannelPasswordRequestMessage,
+} from "./bridge.js";

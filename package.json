@@ -5,6 +5,7 @@
     "build": "pnpm -r build",
     "dev": "pnpm --filter concord-client-workspace dev",
     "dev:client": "pnpm --filter @concord/client dev",
+    "dev:server": "pnpm --filter @concord/concord-server dev:full",
     "clean": "pnpm -r clean"
   },
   "engines": {

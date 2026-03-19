@@ -1,6 +1,7 @@
 packages:
   - "packages/*"
   - "apps/*"
+  - "apps/concord-server/ui"
 
 onlyBuiltDependencies:
   - better-sqlite3
