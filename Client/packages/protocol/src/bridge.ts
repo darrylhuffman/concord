@@ -48,12 +48,19 @@ export interface BridgeProfileUpdateMessage {
   bio: string;
 }
 
+/** Parent responds with the generated encrypted invite URL. */
+export interface BridgeInviteUrlMessage {
+  type: "bridge:invite:url";
+  url: string;
+}
+
 export type ParentToIframeMessage =
   | BridgeInitMessage
   | BridgeRealmKeyMessage
   | BridgeChannelKeyMessage
   | BridgeSignResponseMessage
-  | BridgeProfileUpdateMessage;
+  | BridgeProfileUpdateMessage
+  | BridgeInviteUrlMessage;
 
 // ─── iframe → Parent ────────────────────────────────────────────
 
@@ -121,6 +128,19 @@ export interface BridgeSidebarStateMessage {
   open: boolean;
 }
 
+/** Iframe requests parent to copy text to clipboard. */
+export interface BridgeClipboardCopyMessage {
+  type: "bridge:clipboard:copy";
+  text: string;
+}
+
+/** Iframe requests parent to generate an encrypted invite URL. */
+export interface BridgeInviteGenerateMessage {
+  type: "bridge:invite:generate";
+  inviteId: string;
+  inviteKey: string;
+}
+
 export type IframeToParentMessage =
   | BridgeReadyMessage
   | BridgeSignRequestMessage
@@ -130,7 +150,9 @@ export type IframeToParentMessage =
   | BridgeVoiceStatusMessage
   | BridgeOpenExternalMessage
   | BridgeChannelPasswordRequestMessage
-  | BridgeSidebarStateMessage;
+  | BridgeSidebarStateMessage
+  | BridgeClipboardCopyMessage
+  | BridgeInviteGenerateMessage;
 
 // ─── Union ──────────────────────────────────────────────────────
 

@@ -14,6 +14,7 @@ import type {
   BridgeRealmKeyMessage,
   BridgeChannelKeyMessage,
   BridgeProfileUpdateMessage,
+  BridgeInviteUrlMessage,
   ParentToIframeMessage,
 } from "@concord/protocol";
 
@@ -32,6 +33,7 @@ export interface RealmKeys {
 
 type InitCallback = (data: BridgeInitMessage) => void;
 type ProfileUpdateCallback = (name: string, bio: string) => void;
+type InviteUrlCallback = (url: string) => void;
 
 // ─── State ──────────────────────────────────────────────────────
 
@@ -48,6 +50,7 @@ const pendingSignRequests = new Map<
 
 const initCallbacks = new Set<InitCallback>();
 const profileUpdateCallbacks = new Set<ProfileUpdateCallback>();
+const inviteUrlCallbacks = new Set<InviteUrlCallback>();
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -122,6 +125,12 @@ function handleMessage(event: MessageEvent): void {
         identity.bio = m.bio;
       }
       for (const cb of profileUpdateCallbacks) cb(m.name, m.bio);
+      break;
+    }
+
+    case "bridge:invite:url": {
+      const m = msg as BridgeInviteUrlMessage;
+      for (const cb of inviteUrlCallbacks) cb(m.url);
       break;
     }
   }
@@ -235,6 +244,22 @@ export function requestChannelPassword(
 /** Tell parent to show or hide the realm sidebar (mobile). */
 export function reportSidebarState(open: boolean): void {
   postToParent({ type: "bridge:sidebar:state", open });
+}
+
+/** Request parent to copy text to clipboard (iframe can't use Clipboard API). */
+export function requestCopyToClipboard(text: string): void {
+  postToParent({ type: "bridge:clipboard:copy", text });
+}
+
+/** Request parent to generate an encrypted invite URL. Response arrives via onInviteUrl callback. */
+export function requestInviteUrl(inviteId: string, inviteKey: string): void {
+  postToParent({ type: "bridge:invite:generate", inviteId, inviteKey });
+}
+
+/** Register a callback for when the parent responds with an invite URL. */
+export function onInviteUrl(cb: InviteUrlCallback): () => void {
+  inviteUrlCallbacks.add(cb);
+  return () => { inviteUrlCallbacks.delete(cb); };
 }
 
 // ─── Accessors ──────────────────────────────────────────────────

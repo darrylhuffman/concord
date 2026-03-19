@@ -9,6 +9,7 @@ import { useRolesStore } from "../../stores/roles";
 import { getWebSocketClient } from "../../features/connection/realm-handler";
 import { Check, Copy, MessageSquare, UserX, Ban, MoreHorizontal } from "lucide-react";
 import { hasPermission, Permission } from "@concord/protocol";
+import { copyText } from "../../lib/clipboard";
 import { roleColor } from "../../lib/role-color";
 
 interface UserProfilePopoverProps {
@@ -93,7 +94,7 @@ export function UserProfilePopover({ publicKey, name, trigger, side = "right" }:
   }, []);
 
   function handleCopyKey() {
-    navigator.clipboard.writeText(publicKey).then(() => {
+    copyText(publicKey).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });

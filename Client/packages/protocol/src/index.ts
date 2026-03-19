@@ -91,4 +91,8 @@ export type {
   BridgeVoiceStatusMessage,
   BridgeOpenExternalMessage,
   BridgeChannelPasswordRequestMessage,
+  BridgeSidebarStateMessage,
+  BridgeClipboardCopyMessage,
+  BridgeInviteGenerateMessage,
+  BridgeInviteUrlMessage,
 } from "./bridge.js";

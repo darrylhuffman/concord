@@ -18,6 +18,7 @@ import { VoicePanel } from "../voice/VoiceChannel";
 import { VoiceChannelParticipants } from "../voice/VoiceChannelParticipants";
 import { CreateChannelDialog } from "./CreateChannelDialog";
 import { RealmSettingsDialog } from "./RealmSettingsDialog";
+import { RealmDetailsDialog } from "./RealmDetailsDialog";
 import { RoleEditor } from "./RoleEditor";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar } from "../ui/avatar";
@@ -34,6 +35,7 @@ import {
   Shield,
   ChevronDown,
   EyeOff,
+  Info,
 } from "lucide-react";
 
 interface ChannelSidebarProps {
@@ -62,6 +64,7 @@ export function ChannelSidebar({ onNavigate }: ChannelSidebarProps) {
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [createChannelType, setCreateChannelType] = useState<"text" | "voice">("text");
   const [showRealmSettings, setShowRealmSettings] = useState(false);
+  const [showRealmDetails, setShowRealmDetails] = useState(false);
   const [showRoleEditor, setShowRoleEditor] = useState(false);
   const [showRealmMenu, setShowRealmMenu] = useState(false);
   const dmCtx = useContextMenu();
@@ -118,8 +121,6 @@ export function ChannelSidebar({ onNavigate }: ChannelSidebarProps) {
     setShowCreateChannel(true);
   }
 
-  const hasAdminMenu = isAdmin || canManageRoles;
-
   return (
     <div className="flex flex-col w-60 h-full bg-sidebar-background shrink-0 border-r border-sidebar-border pb-14">
       {/* Realm header */}
@@ -127,17 +128,22 @@ export function ChannelSidebar({ onNavigate }: ChannelSidebarProps) {
         <span className="font-semibold text-foreground truncate flex-1">
           {realmInfo.name}
         </span>
-        {hasAdminMenu && (
-          <button
-            onClick={() => setShowRealmMenu((v) => !v)}
-            className="p-1 rounded hover:bg-sidebar-accent cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronDown className="w-4 h-4" />
-          </button>
-        )}
-        {/* Realm admin dropdown menu */}
+        <button
+          onClick={() => setShowRealmMenu((v) => !v)}
+          className="p-1 rounded hover:bg-sidebar-accent cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </button>
+        {/* Realm dropdown menu */}
         {showRealmMenu && (
           <div className="absolute right-2 top-11 w-48 rounded-md bg-popover border border-border shadow-lg py-1 z-50">
+            <button
+              onClick={() => { setShowRealmMenu(false); setShowRealmDetails(true); }}
+              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-foreground hover:bg-accent cursor-pointer transition-colors"
+            >
+              <Info className="w-3.5 h-3.5" />
+              Realm Details
+            </button>
             {isAdmin && (
               <button
                 onClick={() => { setShowRealmMenu(false); setShowRealmSettings(true); }}
@@ -147,7 +153,7 @@ export function ChannelSidebar({ onNavigate }: ChannelSidebarProps) {
                 Realm Settings
               </button>
             )}
-            {canManageRoles && (
+            {(isAdmin || canManageRoles) && (
               <button
                 onClick={() => { setShowRealmMenu(false); setShowRoleEditor(true); }}
                 className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-foreground hover:bg-accent cursor-pointer transition-colors"
@@ -323,7 +329,11 @@ export function ChannelSidebar({ onNavigate }: ChannelSidebarProps) {
       {/* Voice connected panel — docked at bottom */}
       <VoicePanel />
 
-      {/* Admin dialogs */}
+      {/* Dialogs */}
+      <RealmDetailsDialog
+        open={showRealmDetails}
+        onOpenChange={setShowRealmDetails}
+      />
       <CreateChannelDialog
         open={showCreateChannel}
         onOpenChange={setShowCreateChannel}
